@@ -80,9 +80,9 @@ local autoClaimEnabled = false
 enableClaimToggle.MouseButton1Click:Connect(function()
     autoClaimEnabled = not autoClaimEnabled
     if autoClaimEnabled then
-        enableBoostToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+        enableClaimToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
     else
-        enableBoostToggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        enableClaimToggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
     end
 end)
 
