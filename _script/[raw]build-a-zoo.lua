@@ -8,6 +8,8 @@ local virtualUser = game:GetService("VirtualUser")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+local isMobile = UserInputService.TouchEnabled
+
 -- init
 print("[big hub]loaded...")
 
@@ -31,14 +33,6 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "iloveRoblox"
 screenGui.Parent = game.CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 100)
-frame.Position = UDim2.new(0.5, -100, 0.5, -50)
-frame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-frame.BackgroundTransparency = 0.5 -- 50% transparent
-frame.Parent = game.Players.LocalPlayer.PlayerGui
-
 
 local mainPanel = Instance.new("Frame")
 mainPanel.Size = UDim2.new(0, 640, 0, 640)
@@ -99,29 +93,58 @@ uc.CornerRadius = UDim.new(0, 8)
 local ar = Instance.new("UIAspectRatioConstraint", logo)
 ar.AspectRatio = 1
 
--- Dragging
+-- Resize UI for mobile/desktop
+local function resizeUI()
+    if UserInputService.TouchEnabled then
+        mainPanel.Size = UDim2.new(0.9, 0, 0.9, 0)
+        sidebar.Size = UDim2.new(0.15, 0, 1, 0)
+    else
+        mainPanel.Size = UDim2.new(0, 640, 0, 640)
+        sidebar.Size = UDim2.new(0, 70, 1, 0)
+    end
+end
+
+resizeUI() -- initial
+
+UserInputService:GetPropertyChangedSignal("TouchEnabled"):Connect(resizeUI)
+
+-- Dragging (supports mouse and touch)
 local dragging, dragStart, startPos, moveConn
+
 local function stopDrag()
 	dragging = false
-	if moveConn then moveConn:Disconnect() moveConn = nil end
+	if moveConn then
+		moveConn:Disconnect()
+		moveConn = nil
+	end
 end
+
+local function startDrag(input)
+	dragging = true
+	dragStart = input.Position
+	startPos = mainPanel.Position
+
+	moveConn = UserInputService.InputChanged:Connect(function(i)
+		if dragging and i.UserInputType == input.UserInputType then
+			local delta = i.Position - dragStart
+			mainPanel.Position = UDim2.new(
+				startPos.X.Scale, startPos.X.Offset + delta.X,
+				startPos.Y.Scale, startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+
+	input.Changed:Connect(function()
+		if input.UserInputState == Enum.UserInputState.End then
+			stopDrag()
+		end
+	end)
+end
+
 mainPanel.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = mainPanel.Position
-		moveConn = UserInputService.InputChanged:Connect(function(i)
-			if i.UserInputType == Enum.UserInputType.MouseMovement and dragging then
-				local delta = i.Position - dragStart
-				mainPanel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-					startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-			end
-		end)
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				stopDrag()
-			end
-		end)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or
+	   input.UserInputType == Enum.UserInputType.Touch then
+		startDrag(input)
 	end
 end)
 
@@ -290,10 +313,29 @@ end
 
 -- Toggle UI
 local uiEnabled = true
-UserInputService.InputBegan:Connect(function(input, gpe)
-	if not gpe and input.KeyCode == TOGGLE_KEY then
-		uiEnabled = not uiEnabled
-		screenGui.Enabled = uiEnabled
+local function toggleUI()
+	uiEnabled = not uiEnabled
+	screenGui.Enabled = uiEnabled
+end
+
+-- Toggle button
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 100, 0, 30)
+toggleButton.Position = UDim2.new(1, -110, 0, 10) -- Top-right, with some padding
+toggleButton.AnchorPoint = Vector2.new(1, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 18
+toggleButton.Text = "Toggle UI"
+toggleButton.Parent = screenGui
+toggleButton.ZIndex = mainPanel.ZIndex + 1
+
+toggleButton.MouseButton1Click:Connect(toggleUI)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if not gameProcessed and input.KeyCode == TOGGLE_KEY then
+		toggleUI()
 	end
 end)
 
