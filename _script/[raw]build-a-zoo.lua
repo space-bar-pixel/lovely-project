@@ -34,6 +34,13 @@ screenGui.Name = "iloveRoblox"
 screenGui.Parent = game.CoreGui
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+-- Create a separate ScreenGui for the toggle button
+local toggleGui = Instance.new("ScreenGui")
+toggleGui.Name = "ToggleButtonGui"
+toggleGui.Parent = game:GetService("CoreGui")
+toggleGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+toggleGui.ResetOnSpawn = false
+
 local mainPanel = Instance.new("Frame")
 mainPanel.Size = UDim2.new(0, 640, 0, 640)
 mainPanel.Position = UDim2.new(0.5, 0, 0.5, 0)
