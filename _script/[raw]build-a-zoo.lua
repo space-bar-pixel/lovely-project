@@ -355,7 +355,7 @@ createToggle(sec, "AutoFarm", function(enabled)
 		-- run asynchronously
 		task.spawn(function()
 			while sec and sec.Parent and enabled do
-				task.wait(1)
+				task.wait(10)
 				local Pets = workspace:FindFirstChild("Pets")
 				if not Pets then continue end
 
