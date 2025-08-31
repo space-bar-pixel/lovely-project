@@ -318,18 +318,18 @@ local function toggleUI()
 	screenGui.Enabled = uiEnabled
 end
 
--- Toggle button
+-- Toggle Button (always visible)
 local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 100, 0, 30)
-toggleButton.Position = UDim2.new(1, -110, 0, 10) -- Top-right, with some padding
+toggleButton.Position = UDim2.new(1, -110, 0, 10)
 toggleButton.AnchorPoint = Vector2.new(1, 0)
 toggleButton.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.GothamBold
 toggleButton.TextSize = 18
 toggleButton.Text = "Toggle UI"
-toggleButton.Parent = screenGui
-toggleButton.ZIndex = mainPanel.ZIndex + 1
+toggleButton.Parent = toggleGui -- ✅ FIX: separate GUI
+toggleButton.ZIndex = 999
 
 toggleButton.MouseButton1Click:Connect(toggleUI)
 
