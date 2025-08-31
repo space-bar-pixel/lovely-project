@@ -7,7 +7,7 @@ local placeId = tonumber(string.sub(tostring(game.PlaceId), 1, 10))
 local scriptUrl = scriptsByPlaceId[placeId]
 
 if scriptUrl then
-    print("Loading script PlaceId:", placeId)
+    print("Loading script for PlaceId:", placeId)
     loadstring(game:HttpGet(scriptUrl))()
 else
     print("No script for this PlaceId:", placeId)
