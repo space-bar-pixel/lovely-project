@@ -1,2 +1,1 @@
-local url = "https://raw.githubusercontent.com/space-bar-pixel/lovely-project/refs/heads/main/_script/Main.lua?token=GHSAT0AAAAAADIFOEA3JXSVLX6WEFIYZCGC2FUSU5Q"
-loadstring(game:HttpGet(url))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/space-bar-pixel/lovely-project/refs/heads/main/_script/Main.lua"))()
