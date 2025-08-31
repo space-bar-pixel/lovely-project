@@ -4,4 +4,5 @@ elseif game.PlaceId == 1190485299 then
     loadstring(game:HttpGet("https://i.uerd.de/rt3.lua"))()
 else
     print("This is not the target game.")
+    print("PlaceId: " .. tostring(game.PlaceId))
 end
