@@ -1,9 +1,14 @@
-if game.PlaceId == 105555311806207 then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/space-bar-pixel/lovely-project/refs/heads/main/_script/%5Braw%5Dbuild-a-zoo.lua"))()
-elseif game.PlaceId == 119048529960596 then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/space-bar-pixel/lovely-project/refs/heads/main/_script/RST3.lua"))()
+local scriptsByPlaceId = {
+    [1055553118] = "https://raw.githubusercontent.com/space-bar-pixel/lovely-project/main/_script/game1.lua",
+    [1190485299] = "https://raw.githubusercontent.com/space-bar-pixel/lovely-project/refs/heads/main/_script/RST3.lua"
+}
+
+local placeId = tonumber(string.sub(tostring(game.PlaceId), 1, 10))
+local scriptUrl = scriptsByPlaceId[placeId]
+
+if scriptUrl then
+    print("Loading script for PlaceId:", placeId)
+    loadstring(game:HttpGet(scriptUrl))()
 else
-    print("This is not the target game.")
-    print("PlaceId: " .. game.PlaceId)
-    print("JobId: " .. game.JobId)
+    print("No script for this PlaceId:", placeId)
 end
