@@ -328,15 +328,22 @@ end
 -- Toggle Button (always visible)
 local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 100, 0, 30)
-toggleButton.Position = UDim2.new(1, -110, 0, 10)
+toggleButton.Position = UDim2.new(1, -110, 0, 20)
 toggleButton.AnchorPoint = Vector2.new(1, 0)
 toggleButton.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.GothamBold
+toggleButton.Draggable = true
+toggleButton.Active = true
 toggleButton.TextSize = 18
 toggleButton.Text = "Toggle UI"
 toggleButton.Parent = toggleGui -- ✅ FIX: separate GUI
 toggleButton.ZIndex = 999
+
+-- Optional: Rounded corners
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 6)
+uiCorner.Parent = toggleButton
 
 toggleButton.MouseButton1Click:Connect(toggleUI)
 
