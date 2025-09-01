@@ -362,7 +362,6 @@ createToggle(sec, "AutoFarm", function(enabled)
 		-- run asynchronously
 		task.spawn(function()
 			while sec and sec.Parent and enabled do
-				task.wait(10)
 				local Pets = workspace:FindFirstChild("Pets")
 				if not Pets then continue end
 
@@ -378,6 +377,7 @@ createToggle(sec, "AutoFarm", function(enabled)
 						pcall(function() root.RE:FireServer("Claim") end)
 					end
 				end
+				task.wait(10)
 			end
 		end)
 	end
