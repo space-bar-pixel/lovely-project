@@ -1,5 +1,5 @@
 local scriptsByPlaceId = {
-    [1055553118] = "https://raw.githubusercontent.com/ZebuxHub/Main/refs/heads/main/BuildAZoo.lua"))()",
+    [1055553118] = "https://raw.githubusercontent.com/ZebuxHub/Main/refs/heads/main/BuildAZoo.lua",
     [1190485299] = "https://raw.githubusercontent.com/space-bar-pixel/lovely-project/refs/heads/main/_script/RST3.lua"
 }
 
