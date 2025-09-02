@@ -216,7 +216,7 @@ local function createSection(parent, titleText)
 end
 
 -- Toggle
-local function createToggle(parent, labelText, callback)
+local function createToggle(parent, labelText, stage, callback)
 	local container = Instance.new("Frame")
 	container.Size = UDim2.new(1, 0, 0, 36)
 	container.BackgroundTransparency = 1
@@ -255,7 +255,7 @@ local function createToggle(parent, labelText, callback)
 	knobCorner.CornerRadius = UDim.new(0, 12)
 	knobCorner.Parent = knob
 
-	local enabled = false
+	local enabled = stage
 	switch.MouseButton1Click:Connect(function()
 		enabled = not enabled
 		if enabled then
@@ -357,7 +357,7 @@ end)
 local homePage = addSidebarIcon(6031094678, "Home")
 local sec = createSection(homePage, "Main Options")
 
-createToggle(sec, "AutoFarm", function(enabled)
+createToggle(sec, "AutoFarm", true, function(enabled)
 	if enabled then
 		-- run asynchronously
 		task.spawn(function()
@@ -383,7 +383,7 @@ createToggle(sec, "AutoFarm", function(enabled)
 	end
 end)
 
-createToggle(sec, "Anti-AFK", function(enabled)
+createToggle(sec, "Anti-AFK", false, function(enabled)
 	if enabled then
 		game:GetService("Players").LocalPlayer.Idled:Connect(function()
 			virtualUser:CaptureController()
@@ -403,7 +403,7 @@ createSlider(sec3, "Main UI Transparency", 0, 100, 100, function(value)
     mainStroke.Transparency = transparency
     sidebar.Transparency = transparency
 end)
-createToggle(sec2, "Show Avatar", function(s) print("Avatar: ", s) end)
+createToggle(sec2, "Show Avatar", false, function(s) print("Avatar: ", s) end)
 
 -- Start on home
 tabs["Home"].Button.BackgroundColor3 = Color3.fromRGB(100,0,0)
