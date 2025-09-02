@@ -399,7 +399,7 @@ createToggle(sec, "AutoFarm", true, function(enabled)
 	end
 end)
 
-createToggle(sec, "Anti-AFK", false, function(enabled)
+createToggle(sec, "Anti-AFK", true, function(enabled)
 	if enabled then
 		game:GetService("Players").LocalPlayer.Idled:Connect(function()
 			virtualUser:CaptureController()
