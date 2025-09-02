@@ -6,11 +6,12 @@ return(function()local N,Y,U,W,A,h,B,s,L,k,R,t,m,i=string.byte,string.sub,string
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
-local RESET_INTERVAL = 300
-
 task.spawn(function()
     while true do
         task.wait(300)
-        print("Resetting character")
+        if player and player.Character then
+            player.Character:BreakJoints()
+        end
     end
 end)
+
