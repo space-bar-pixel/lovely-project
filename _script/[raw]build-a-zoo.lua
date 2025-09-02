@@ -256,6 +256,21 @@ local function createToggle(parent, labelText, stage, callback)
 	knobCorner.Parent = knob
 
 	local enabled = stage
+
+	-- 🔄 Initialize visual state & callback
+	if enabled then
+		switch.BackgroundColor3 = Color3.fromRGB(20, 160, 20)
+		knob.Position = UDim2.new(1, -24, 0.5, -11)
+	else
+		switch.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+		knob.Position = UDim2.new(0, 2, 0.5, -11)
+	end
+
+	if callback then
+		pcall(callback, enabled)
+	end
+
+	-- 🖱️ Click toggle
 	switch.MouseButton1Click:Connect(function()
 		enabled = not enabled
 		if enabled then
@@ -270,6 +285,7 @@ local function createToggle(parent, labelText, stage, callback)
 		end
 	end)
 end
+
 
 -- Slider
 local function createSlider(parent, text, min, max, default, callback)
