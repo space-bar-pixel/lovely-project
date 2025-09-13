@@ -229,7 +229,7 @@ TradeTitle.TextScaled = true
 TradeTitle.Parent = TradePopup
 
 local TradeList = Instance.new("Frame")
-TradeList.Size = UDim2.new(1, -10, 1, -50) -- adjust height for padding
+TradeList.Size = UDim2.new(1, -10, 1, -50)
 TradeList.Position = UDim2.new(0, 5, 0, 40)
 TradeList.BackgroundTransparency = 1
 TradeList.Parent = TradePopup
@@ -263,7 +263,7 @@ StartBtn.Parent = TradePopup
 -- Given count label
 local GivenLabel = Instance.new("TextLabel")
 GivenLabel.Size = UDim2.new(1, -20, 0, 20)
-GivenLabel.Position = UDim2.new(0, -40, 0, 310) -- just below GiftBox
+GivenLabel.Position = UDim2.new(0, -40, 0, 310)
 GivenLabel.BackgroundTransparency = 1
 GivenLabel.Text = "Given: 0"
 GivenLabel.TextScaled = true
@@ -273,7 +273,7 @@ GivenLabel.Parent = TradePopup
 -- Left count label
 local LeftLabel = Instance.new("TextLabel")
 LeftLabel.Size = UDim2.new(1, -20, 0, 20)
-LeftLabel.Position = UDim2.new(0, 60, 0, 310) -- below GivenLabel
+LeftLabel.Position = UDim2.new(0, 60, 0, 310)
 LeftLabel.BackgroundTransparency = 1
 LeftLabel.Text = "Left: 0"
 LeftLabel.TextScaled = true
@@ -291,7 +291,7 @@ for _, fruit in ipairs(fruits) do
 	local row = Instance.new("Frame")
 	row.Size = UDim2.new(1, 0, 0, 30)
 	row.BackgroundTransparency = 1
-	row.Parent = TradeList  -- add to container with UIListLayout
+	row.Parent = TradeList
 
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(0.5, 0, 1, 0)
