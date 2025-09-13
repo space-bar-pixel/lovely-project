@@ -413,13 +413,14 @@ StartBtn.MouseButton1Click:Connect(function()
 			end
 			if not isRunning or myId ~= runId then break end
 			fireServer({"Focus",fruitFullName})
-			GiftRE:FireServer(targetPlayer, fruitFullName) -- <- send fruit fullname
+			task.wait(0.1)
+			GiftRE:FireServer(targetPlayer) -- <- send fruit fullname
 
 			given += 1
 			GivenLabel.Text = "Given: " .. given
 			LeftLabel.Text = "Left: " .. (#tradeQueue - given)
 
-			task.wait(0.2)
+			task.wait(0.3)
 		end
 
 		if myId == runId then
