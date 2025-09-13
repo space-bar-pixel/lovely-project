@@ -628,6 +628,7 @@ ToggleUiBtn.MouseButton1Click:Connect(function()
 	Frame.Visible = not Frame.Visible
 	if not Frame.Visible then
 		PopupFrame.Visible = false
+		TradePopup.Visible = false
 	end
 end)
 
@@ -639,10 +640,12 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		Frame.Visible = not Frame.Visible
 		if not Frame.Visible then
 			PopupFrame.Visible = false
+			TradePopup.Visible = false
 		end
 	end
 
 	if input.KeyCode == Enum.KeyCode.Escape and PopupFrame.Visible then
 		PopupFrame.Visible = false
+		TradePopup.Visible = false
 	end
 end)
