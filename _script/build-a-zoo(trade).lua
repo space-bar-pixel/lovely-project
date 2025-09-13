@@ -5,8 +5,8 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
 
---local GiftRE = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("GiftRE")
---local CharacterRE = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("CharacterRE")
+local GiftRE = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("GiftRE")
+local CharacterRE = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("CharacterRE")
 
 local function fireServer(arg)
 	CharacterRE:FireServer(unpack(arg))
