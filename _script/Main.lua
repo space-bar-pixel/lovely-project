@@ -1,5 +1,6 @@
 local scriptsByPlaceId = {
     [1055553118] = "https://raw.githubusercontent.com/space-bar-pixel/lovely-project/refs/heads/main/_script/build-a-zoo(trade).lua",
+    [1375954773] = "https://raw.githubusercontent.com/space-bar-pixel/lovely-project/refs/heads/main/_script/One%20Piece%3A%20Mythical.lua",
     [1190485299] = "https://raw.githubusercontent.com/space-bar-pixel/lovely-project/refs/heads/main/_script/RST3.lua"
 }
 
