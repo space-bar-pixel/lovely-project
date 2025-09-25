@@ -1,5 +1,6 @@
 local MacLib = loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 local UserInputService = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
 
 local Window = MacLib:Window({
 	Title = "Pizza Hub",
@@ -33,24 +34,28 @@ local mainSec3 = Main:Section({ Side = "Right" })
 local mainSec4 = Main:Section({ Side = "Right" })
 
 local tpSec1 = Teleport:Section({ Side = "Left" })
+local tpSec2 = Teleport:Section({ Side = "Right" })
 
 local settingSec1 = Setting:Section({ Side = "Left" })
 local settingSec2 = Setting:Section({ Side = "Left" })
 local settingSec3 = Setting:Section({ Side = "Right" })
 
+
+
 -- Menu data
 local Menu = {
 	playerData = {
-		player = game.Players.LocalPlayer,
-		userName = game.Players.LocalPlayer.Name,
-		userId = game.Players.LocalPlayer.UserId
-	},
+        player = player,
+        humanoidRootPart = player.Character:WaitForChild("HumanoidRootPart"),
+        userName = player.Name,
+        userId = player.UserId
+    },
 	config = {
 		lastTeleport = nil
 	},
 	tabs = {
 		main = { mainSec1 = mainSec1, mainSec2 = mainSec2, mainSec3 = mainSec3, mainSec4 = mainSec4 },
-		teleport = { tpSec1 = tpSec1 },
+		teleport = { tpSec1 = tpSec1, tpSec2 = tpSec2 },
 		setting = { settingSec1 = settingSec1, settingSec2 = settingSec2, settingSec3 = settingSec3 }
 	},
 	system = {
@@ -58,24 +63,32 @@ local Menu = {
 	}
 }
 
+local function updateChar(char)
+	Menu.playerData.humanoidRootPart = char:WaitForChild("HumanoidRootPart")
+end
+	
+player.CharacterAdded:Connect(updateChar)
+
 -- Main function
 local ClaimLoopThread
+local autoClaimEnabled = false
+
 
 Menu.tabs.main.mainSec1:Toggle({
 	Name = "Auto Claim",
 	Default = false,
 	Callback = function(value)
+		autoClaimEnabled = value
 		local userId = Menu.playerData.userId
 		
 		if value then
 			ClaimLoopThread = task.spawn(function()
 				local remote1 = game:GetService("ReplicatedStorage").Connections:WaitForChild("Claim_Sam")
 				local remote2 = game:GetService("Workspace").UserData["User" .. userId].ClaimRewardHourly.Connections:WaitForChild("Claim_Sam")
-				local args = { "Claim1", "RewardMark" }
 
-				while value do
-					remote1:FireServer(unpack(args[1]))
-					remote2:FireServer(unpack(args[2]))
+				while autoClaimEnabled do
+					remote1:FireServer("Claim1")
+					remote2:FireServer("RewardMark")
 					task.wait(math.random(2, 4))
 				end
 			end)
@@ -84,29 +97,23 @@ Menu.tabs.main.mainSec1:Toggle({
 				task.cancel(ClaimLoopThread)
 			end
 		end
-		
-		Window:Notify({
-			Title = "Pizza Hub",
-			Description = (value and "Enabled " or "Disabled ") .. "Auto Claim"
-		})
 	end,
 }, "AutoClaim")
 
 local hakiLoopThread
+local autoHakiEnabled = false
 
 Menu.tabs.main.mainSec1:Toggle({
 	Name = "Auto Haki",
 	Default = false,
 	Callback = function(value)
+		autoHakiEnabled = value
 		local userId = Menu.playerData.userId
 
 		if value then
 			hakiLoopThread = task.spawn(function()
-				while value do
-					local args = {
-						[1] = "On",
-						[2] = 1
-					}
+				while autoHakiEnabled do
+					local args = { "On", 1 }
 					workspace.UserData["User" .. userId].III:FireServer(unpack(args))
 					task.wait(1)
 				end
@@ -115,12 +122,8 @@ Menu.tabs.main.mainSec1:Toggle({
 			if hakiLoopThread then
 				task.cancel(hakiLoopThread)
 			end
-
-			local args = {
-				[1] = "Off",
-				[2] = 9
-			}
-			workspace.UserData["User_" .. userId].III:FireServer(unpack(args))
+			local args = { "Off", 9 }
+			workspace.UserData["User" .. userId].III:FireServer(unpack(args))
 		end
 		
 		Window:Notify({
@@ -128,7 +131,7 @@ Menu.tabs.main.mainSec1:Toggle({
 			Description = (value and "Enabled " or "Disabled ") .. "Auto Haki"
 		})
 	end,
-}, "AutoClaim")
+}, "AutoHaki")
 
 -- Teleport function
 local ManualLocations = {
@@ -301,6 +304,44 @@ Menu.tabs.teleport.tpSec1:Button({
 		end
 	end,
 })
+
+local chestLoopThread
+local autochestEnabled = false
+
+Menu.tabs.teleport.tpSec2:Toggle({
+    Name = "Collect All Chests",
+    Default = false,
+	Callback = function(value)
+        autochestEnabled = value
+        local chestsFolder = workspace:WaitForChild("Chests")
+
+        if value then
+            chestLoopThread = task.spawn(function()
+                while autochestEnabled do
+                    for _, chest in pairs(chestsFolder:GetChildren()) do
+                        if chest:IsA("Model") and chest.Name == "TreasureChest" then
+                            local part = chest:FindFirstChildWhichIsA("BasePart")
+                            if part then
+                                local root = Menu.playerData.humanoidRootPart
+                                if root then
+                                    root.CFrame = CFrame.new(part.Position)
+                                end
+                                task.wait(0.5)
+                            end
+                        end
+                    end
+                    task.wait(1)
+                end
+            end)
+        else
+            if chestLoopThread then
+				task.cancel(chestLoopThread)
+				chestLoopThread = nil
+			end
+        end
+	end,
+})
+
 
 -- Settings
 Menu.tabs.setting.settingSec3:Keybind({
