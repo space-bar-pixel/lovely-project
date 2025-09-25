@@ -24,7 +24,7 @@ local localPlayer = Players.LocalPlayer
 local isRunning = false
 local isPaused = false
 local runId = 0 -- cancel token
-local delayTime = 0.001
+local delayTime = 0.1
 local dupeRunning = false
 local autofarm = false
 
