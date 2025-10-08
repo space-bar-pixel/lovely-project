@@ -372,7 +372,7 @@ Menu.tabs.main.right:Button({
 	Callback = function()
 		EggInventory = GetEggsInv()  -- refresh inventory
 
-		local totalToGive = tonumber(totalInput:GetInput()) or 0
+		local totalToGive = tonumber(totalInput:GetInput()) or 
 		if totalToGive <= 0 then totalToGive = #EggInventory end
 
 		local playerName = selectedPlayerName
@@ -426,6 +426,7 @@ Menu.tabs.main.right:Button({
 				if not dupeRunning then break end
 				while dupePaused and dupeRunning and myId == runId do task.wait(0.1) end
 				
+				for _ in range()
 				pcall(function() DeployRE:FireServer({ event = "deploy", uid = eggId }) end)
 				task.wait(0.1)
 				pcall(function() CharacterRE:FireServer("Focus", eggId) end)
