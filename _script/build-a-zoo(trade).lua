@@ -455,30 +455,31 @@ local function getNil(objType, objName)
 	end
 end
 
-local function toggleDupe()
-	dupeRunning = not dupeRunning
-	if dupeRunning then
-		DupeBtn.Text = "Stop Dupe"
-		DupeBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
-		task.spawn(function()
-			while dupeRunning do
-				for _, targetName in ipairs(nameTarget) do
-					local target = getNil("Player", targetName)
-					if target then
-						GiftRE:FireServer(target)
-					end
-				end
-				task.wait(delayTime)
-			end
-		end)
-	else
-		DupeBtn.Text = "Start Dupe"
-		DupeBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 170)
-	end
+local function Dupe()
+	local object = game:GetService("ReplicatedStorage").Remote.FishingRE
+	local args = {
+	    "SetEggQuickSell",
+	    {
+	        ["1"] = "\255",
+	        ["Diamond"] = false,
+	        ["3"] = true,
+	        ["2"] = false,
+	        ["5"] = false,
+	        ["4"] = false,
+	        ["6"] = false,
+	        ["Golden"] = false,
+	        ["Electirc"] = false,
+	        ["Fire"] = false,
+	        ["Dino"] = false,
+	        ["Snow"] = false
+	    }
+	}
+	
+	object:FireServer(unpack(args))
 end
 
 
-DupeBtn.MouseButton1Click:Connect(toggleDupe)
+DupeBtn.MouseButton1Click:Connect(Dupe)
 
 -- Anti-AFK (Mobile + PC)
 task.spawn(function()
@@ -551,10 +552,10 @@ local purchasedEggs = {}
 
 local buylist = {
 	egg = {
-		"UnicornEgg"
+		"GeneralKongEgg"
 	},
 	mutate = {
-		"Jurassic"
+		"Snow"
 	}
 }
 
