@@ -37,6 +37,7 @@ local isRunning = false
 local isPaused = false
 local runId = 0
 local dupeRunning = false
+local dupePaused = false
 local autofarm = false
 local fruitAmounts = {}
 
@@ -284,40 +285,44 @@ local function GetEggsInv()
 		return eggs
 	end
 
-	for _, item in pairs(scrollingFrame:GetChildren()) do
-		local btn = item:FindFirstChild("BTN")
-		if btn then
-			local stat = btn:FindFirstChild("Stat")
-			local mutsFolder = btn:FindFirstChild("Muts")
+	dupeRunning = true
+	dupePaused = false
 
-			local eggName = "Unknown"
-			if stat and stat:FindFirstChild("NAME") and stat.NAME:FindFirstChild("Value") then
-				local nameValue = stat.NAME.Value
-				if nameValue:IsA("TextLabel") then
-					eggName = nameValue.Text
-				end
-			end
+	task.spawn(function()
+		for _, item in pairs(scrollingFrame:GetChildren()) do
+			local btn = item:FindFirstChild("BTN")
+			if btn then
+				local stat = btn:FindFirstChild("Stat")
+				local mutsFolder = btn:FindFirstChild("Muts")
 
-			local visibleMut = nil
-			if mutsFolder then
-				for _, mut in pairs(mutsFolder:GetChildren()) do
-					if mut:IsA("GuiObject") and mut.Visible then
-						visibleMut = mut.Name
-						break
+				local eggName = "Unknown"
+				if stat and stat:FindFirstChild("NAME") and stat.NAME:FindFirstChild("Value") then
+					local nameValue = stat.NAME.Value
+					if nameValue:IsA("TextLabel") then
+						eggName = nameValue.Text
 					end
 				end
-			end
 
-			if visibleMut then
-				table.insert(eggs, {
-					id = item.Name,
-					name = eggName,
-					mutation = visibleMut
-				})
+				local visibleMut = nil
+				if mutsFolder then
+					for _, mut in pairs(mutsFolder:GetChildren()) do
+						if mut:IsA("GuiObject") and mut.Visible then
+							visibleMut = mut.Name
+							break
+						end
+					end
+				end
+
+				if visibleMut then
+					table.insert(eggs, {
+						id = item.Name,
+						name = eggName,
+						mutation = visibleMut
+					})
+				end
 			end
 		end
-	end
-
+	end)
 	return eggs
 end
 
@@ -360,12 +365,16 @@ local totalInput = Menu.tabs.main.right:Input({
 })
 
 -- Start Give Loop button
+local dupeLabel = Menu.tabs.main.right:Label({ Text = "Given: 0                                             Left: 0" })
+
 Menu.tabs.main.right:Button({
 	Name = "execute dupe",
 	Callback = function()
 		EggInventory = GetEggsInv()  -- refresh inventory
 
-		local totalToGive = tonumber(totalInput:GetInput())
+		local totalToGive = tonumber(totalInput:GetInput()) or 0
+		if totalToGive <= 0 then totalToGive = #EggInventory end
+
 		local playerName = selectedPlayerName
 		if not playerName or playerName == "" then
 			Window:Notify({ Title = "Error", Description = "Please select a player.", Lifetime = 3 })
@@ -401,37 +410,66 @@ Menu.tabs.main.right:Button({
 			return
 		end
 
-		-- Trim queue if more than total
 		while #queue > totalToGive do
 			table.remove(queue)
 		end
 
 		-- Start give loop
 		local given = 0
-		isRunning = true
+		dupeRunning = true
+		dupePaused = false
+		runId += 1
+		local myId = runId
+
 		task.spawn(function()
 			for _, eggId in ipairs(queue) do
-				if not isRunning then break end
-
+				if not dupeRunning then break end
+				while dupePaused and dupeRunning and myId == runId do task.wait(0.1) end
+				
 				pcall(function() DeployRE:FireServer({ event = "deploy", uid = eggId }) end)
 				task.wait(0.1)
 				pcall(function() CharacterRE:FireServer("Focus", eggId) end)
 				task.wait(0.1)
 				pcall(function() GiftRE:FireServer(targetPlayer) end)
+
 				given += 1
 				pcall(function()
-					givenLabel:UpdateName("Given: " .. given .. "  Left: " .. (totalToGive - given))
+					dupeLabel:UpdateName("Given: " .. given .. "                                             Left: " .. (#queue - given))
 				end)
 				task.wait(0.1)
 			end
 
-			isRunning = false
+			dupeRunning = false
 			Window:Notify({Title = "Done", Description = "Egg give finished.", Lifetime = 3})
-			pcall(function() givenLabel:UpdateName("Given: 0  Left: 0") end)
+			pcall(function() dupeLabel:UpdateName("Given: 0                                             Left: 0") end)
 		end)
 	end
 })
 
+-- Pause / Resume
+Menu.tabs.main.right:Button({
+	Name = "Pause / Resume",
+	Callback = function()
+		if not dupeRunning then
+			Window:Notify({ Title = "Info", Description = "Not currently running.", Lifetime = 2 })
+			return
+		end
+		dupePaused = not dupePaused
+		Window:Notify({ Title = dupePaused and "Paused" or "Resumed", Description = "", Lifetime = 2 })
+	end
+})
+
+-- Cancel Loop
+Menu.tabs.main.right:Button({
+	Name = "Cancel Loop",
+	Callback = function()
+		runId += 1
+		dupeRunning = false
+		dupePaused = false
+		pcall(function() dupeLabel:UpdateName("Given: 0                                             Left: 0") end)
+		Window:Notify({ Title = "Cancelled", Text = "Gift loop stopped.", Lifetime = 2 })
+	end
+})
 
 -----------------------------------------------------------
 -- DUPE TAB
