@@ -17,6 +17,7 @@ local PlayerBuiltBlocks = workspace:WaitForChild("PlayerBuiltBlocks")
 local GiftRE = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("GiftRE")
 local DeployRE = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("DeployRE")
 local CharacterRE = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("CharacterRE")
+local FoodStoreRE = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("FoodStoreRE")
 
 -- Helpers
 local function getHumanoidRoot()
@@ -26,11 +27,11 @@ local function getHumanoidRoot()
 	return nil
 end
 
-local function fireServer(arg)
+local function fireServer(obj, arg)
 	if type(arg) == "table" and arg[1] then
-		CharacterRE:FireServer(unpack(arg))
+		obj:FireServer(unpack(arg))
 	else
-		CharacterRE:FireServer(arg)
+		obj:FireServer(arg)
 	end
 end
 
@@ -56,14 +57,17 @@ local runId = 0
 local dupeRunning = false
 local dupePaused = false
 local autofarm = false
+local autoBuyFruit = false
 local plantStage = false
 
+local fruitOptions = {}
 local fruitAmounts = {}
 local eggOptions = {}
 
 local selectedPlayerName = nil
 local selectedEggName = nil
 local selectedMutName = nil
+local selectedFruits = {}
 
 local menuVisible = true
 
@@ -84,12 +88,14 @@ local Window = MacLib:Window({
 
 -- Tabs & sections
 local MainGroup = Window:TabGroup()
+local SubGroup = Window:TabGroup()
 local SettingGroup = Window:TabGroup()
 
 local mainTab = MainGroup:Tab({ Name = "Main", Image = "" })
-local EggTab = MainGroup:Tab({ Name = "Egg", Image = "" })
-local DupeTab = MainGroup:Tab({ Name = "Dupe", Image = "" })
 local AutoTab = MainGroup:Tab({ Name = "AutoFarm", Image = "" })
+local EggTab = SubGroup:Tab({ Name = "Egg", Image = "" })
+local FruitTab = SubGroup:Tab({ Name = "Fruit", Image = "" })
+local DupeTab = SubGroup:Tab({ Name = "Dupe", Image = "" })
 local Setting = SettingGroup:Tab({ Name = "Setting", Image = "" })
 
 local mainSecLeft1 = mainTab:Section({ Side = "Left" })
@@ -97,6 +103,8 @@ local mainSecLeft2 = mainTab:Section({ Side = "Left" })
 local mainSecRight = mainTab:Section({ Side = "Right" })
 
 local eggSec1 = EggTab:Section({ Side = "Left" })
+
+local FruitSec1 = FruitTab:Section({ Side = "Left" })
 
 local dupeSec1 = DupeTab:Section({ Side = "Left" })
 local autoSec1 = AutoTab:Section({ Side = "Left" })
@@ -116,6 +124,7 @@ local Menu = {
 	tabs = {
 		main = { left1 = mainSecLeft1, left2 = mainSecLeft2, right = mainSecRight },
 		egg = { left1 = eggSec1 },
+		fruit = { left1 = FruitSec1 },
 		dupe = { dupeSec1 = dupeSec1 },
 		auto = { autoSec1 = autoSec1 },
 		setting = { settingSec1 = settingSec1, settingSec2 = settingSec2, settingSec3 = settingSec3 }
@@ -1309,11 +1318,23 @@ local Menu = {
 			}
 		},
 		fruits = {
-			{name="volt ginkgo", fullname="VoltGinkgo"},
-			{name="deepsea pearl", fullname="DeepseaPearlFruit"},
-			{name="colossal pinecone", fullname="ColossalPinecone"},
-			{name="gold mango", fullname="GoldMango"},
-			{name="bloodstone cycad", fullname="BloodstoneCycad"}
+			{name="Strawberry", fullname="Strawberry"},
+			{name="Blueberry", fullname="Blueberry"},
+			{name="Watermelon", fullname="Watermelon"},
+			{name="Apple", fullname="Apple"},
+			{name="Orange", fullname="Orange"},
+			{name="Corn", fullname="Corn"},
+			{name="Banana", fullname="Banana"},
+			{name="Grape", fullname="Grape"},
+			{name="Pear", fullname="Pear"},
+			{name="PineApple", fullname="PineApple"},
+			{name="Dragon Fruit", fullname="DragonFruit"},
+			{name="Gold Mango", fullname="GoldMango"},
+			{name="Bloodstone Cycad", fullname="BloodstoneCycad"},
+			{name="Colossal Pinecone", fullname="ColossalPinecone"},
+			{name="Volt Ginkgo", fullname="VoltGinkgo"},
+			{name="Deepsea Pearl", fullname="DeepseaPearlFruit"},
+			{name="Durian", fullname="Durian"}
 		},
 		eggs = {
 			{name="Basic Egg"},
@@ -1350,7 +1371,8 @@ local Menu = {
 			"Jurassic", 
 			"Snow"
 		},
-		EggInventory = {}
+		EggInventory = {},
+		FruitShop = {}
 	}
 }
 
@@ -1513,7 +1535,7 @@ Menu.tabs.main.left2:Button({
 
 				-- focus then send
 				pcall(function()
-					fireServer({"Focus", fruitFullName})
+					fireServer(CharacterRE,{"Focus", fruitFullName})
 				end)
 				task.wait(0.1)
 				pcall(function()
@@ -1572,7 +1594,7 @@ local MainEggDropdown = Menu.tabs.main.right:Dropdown({
 	Name = "Eggs List",
 	Search = true,
 	Multi = false,
-	Required = true,
+	Required = false,
 	Options = eggOptions,
 	Default = { "General Kong Egg" },
 	Callback = function(selectedNames)
@@ -1586,7 +1608,7 @@ local MainMutsDropdown = Menu.tabs.main.right:Dropdown({
 	Name = "Mutation List",
 	Search = true,
 	Multi = false,
-	Required = true,
+	Required = false,
 	Options = Menu.data.muts,
 	Default = { "Snow" },
 	Callback = function(selectedNames)
@@ -1875,7 +1897,7 @@ Menu.tabs.egg.left1:Toggle({
 			plantStage = false
 			Window:Notify({
 				Title = "Stopped",
-				Description = "Stopped planting eggs.",w
+				Description = "Stopped planting eggs.",
 				Lifetime = 3
 			})
 		end
@@ -1903,41 +1925,78 @@ Menu.tabs.egg.left1:Button({
 })
 
 -----------------------------------------------------------
+-- FRUIT TAB
+-----------------------------------------------------------
+for _, v in ipairs(Menu.data.fruits) do
+	table.insert(fruitOptions, v.name)
+end
+
+local FruitDropdown = Menu.tabs.fruit.left1:Dropdown({
+	Name = "Fruit List",
+	Search = true,
+	Multi = true,
+	Required = false,
+	Options = fruitOptions,
+	Default = {  },
+	Callback = function(Value)
+		selectedFruits = {}
+		for v, State in next, Value do
+			if State then
+				for _, fruitData in ipairs(Menu.data.fruits) do
+                    if fruitData.name == v then
+                        table.insert(selectedFruits, fruitData.fullname)
+                        break
+                    end
+                end
+			end
+		end
+	end
+})
+
+Menu.tabs.fruit.left1:Toggle({
+    Name = "AutoBuy",
+    Default = false,
+    Callback = function(stage)
+        autoBuyFruit = stage
+        
+        if stage then
+            Window:Notify({ Title = "AutoBuy", Description = "Started", Lifetime = 2 })
+            task.spawn(function()
+                while autoBuyFruit do
+                    local ScrollingFrame = player.PlayerGui.ScreenFoodStore.Root.Frame.ScrollingFrame
+                    if ScrollingFrame then
+                        for _, fruit in pairs(selectedFruits) do
+                            if not autoBuyFruit then break end
+                            local fruitFrame = ScrollingFrame:FindFirstChild(fruit)
+                            if fruitFrame then
+                                local itemButton = fruitFrame:FindFirstChild("ItemButton")
+                                if itemButton then
+                                    local stockLabel = itemButton:FindFirstChild("StockLabel")
+                                    if stockLabel and stockLabel.Text ~= "No Stock" then
+                                        pcall(function() FoodStoreRE:FireServer(fruit) end)
+										task.wait(0.1)
+										pcall(function() CharacterRE:FireServer("Focus") end)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+
+
+
+-----------------------------------------------------------
 -- DUPE TAB
 -----------------------------------------------------------
 Menu.tabs.dupe.dupeSec1:Button({
 	Name = "Start Dupe",
 	Callback = function()
-		if dupeRunning then
-			Window:Notify({ Title = "Attention", Description = "Dupe is Already run.", Lifetime = 3 })
-			return
-		end
-		dupeRunning = true
-
-		local ok, object = pcall(function() return ReplicatedStorage.Remote.FishingRE end)
-		if not ok or not object then
-			Window:Notify({ Title = "Error", Description = "FishingRE not found.", Lifetime = 3 })
-			return
-		end
-		local args = {
-			"SetEggQuickSell",
-			{
-				["1"] = "\255",
-				["Diamond"] = false,
-				["3"] = true,
-				["2"] = false,
-				["5"] = false,
-				["4"] = false,
-				["6"] = false,
-				["Golden"] = false,
-				["Electirc"] = false,
-				["Fire"] = false,
-				["Dino"] = false,
-				["Snow"] = false
-			}
-		}
-		pcall(function() object:FireServer(unpack(args)) end)
-		Window:Notify({ Title = "Dupe Triggered", Description = "Dupe action sent.", Lifetime = 3 })
+		
 	end
 })
 
