@@ -1,4 +1,3 @@
--- Load MacLib
 local MacLib = loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 
 -- Services
@@ -57,6 +56,7 @@ local runId = 0
 local dupeRunning = false
 local dupePaused = false
 local autofarm = false
+local autoBuyEggs = false
 local autoBuyFruit = false
 local plantStage = false
 
@@ -65,8 +65,8 @@ local fruitAmounts = {}
 local eggOptions = {}
 
 local selectedPlayerName = nil
-local selectedEggName = nil
-local selectedMutName = nil
+local selectedEggName = {}
+local selectedMutName = {}
 local selectedFruits = {}
 
 local menuVisible = true
@@ -103,6 +103,7 @@ local mainSecLeft2 = mainTab:Section({ Side = "Left" })
 local mainSecRight = mainTab:Section({ Side = "Right" })
 
 local eggSec1 = EggTab:Section({ Side = "Left" })
+local eggSec2 = EggTab:Section({ Side = "Right" })
 
 local FruitSec1 = FruitTab:Section({ Side = "Left" })
 
@@ -123,7 +124,7 @@ local Menu = {
     },
 	tabs = {
 		main = { left1 = mainSecLeft1, left2 = mainSecLeft2, right = mainSecRight },
-		egg = { left1 = eggSec1 },
+		egg = { left1 = eggSec1, right1 = eggSec2 },
 		fruit = { left1 = FruitSec1 },
 		dupe = { dupeSec1 = dupeSec1 },
 		auto = { autoSec1 = autoSec1 },
@@ -1590,30 +1591,30 @@ for _, egg in ipairs(Menu.data.eggs) do
 	table.insert(eggOptions, egg.name)
 end
 
-local MainEggDropdown = Menu.tabs.main.right:Dropdown({
+local EggDropdown1 = Menu.tabs.main.right:Dropdown({
 	Name = "Eggs List",
 	Search = true,
 	Multi = false,
 	Required = false,
 	Options = eggOptions,
-	Default = { "General Kong Egg" },
-	Callback = function(selectedNames)
-		selectedEggName = selectedNames
-		Window:Notify({ Title = "Selected", Description = "Selected" .. selectedNames .. " Eggs!", Lifetime = 3 })
+	Default = {  },
+	Callback = function(v)
+		table.insert(selectedEggName, v)
+		Window:Notify({ Title = "Selected", Description = "Selected" .. v .. " Eggs!", Lifetime = 3 })
 	end
 })
 
 -- Create dropdown UI
-local MainMutsDropdown = Menu.tabs.main.right:Dropdown({
+local MutsDropdown1 = Menu.tabs.main.right:Dropdown({
 	Name = "Mutation List",
 	Search = true,
 	Multi = false,
 	Required = false,
 	Options = Menu.data.muts,
-	Default = { "Snow" },
-	Callback = function(selectedNames)
-		selectedMutName = selectedNames
-		Window:Notify({ Title = "Selected", Description = "Selected" .. selectedNames .. " Eggs!", Lifetime = 3 })
+	Default = {  },
+	Callback = function(v)
+		table.insert(selectedEggName, v)
+		Window:Notify({ Title = "Selected", Description = "Selected" .. v .. " Eggs!", Lifetime = 3 })
 	end
 })
 
@@ -1655,16 +1656,24 @@ Menu.tabs.main.right:Button({
 			player.Character.HumanoidRootPart.CFrame = targetChar.HumanoidRootPart.CFrame + Vector3.new(0,5,0)
 		end
 
-		if not selectedEggName or not selectedMutName then
-			Window:Notify({Title = "Error", Description = "Select egg and mutation!", Lifetime = 3})
+		if (not selectedEggName or #selectedEggName == 0) or (not selectedMutName or #selectedMutName == "") then
+			Window:Notify({
+				Title = "Error",
+				Description = "Select at least one egg and a mutation!",
+				Lifetime = 3
+			})
 			return
 		end
 
-		-- Filter EggInventory by name + mutation
 		local queue = {}
 		for _, egg in ipairs(Menu.data.EggInventory) do
-			if egg.name == selectedEggName and egg.mutation == selectedMutName then
-				table.insert(queue, egg.id)
+			for _, allowedName in ipairs(selectedEggName) do
+				for _, allowedMut in ipairs(selectedMutName) do
+					if egg.name == allowedName and egg.mutation == allowedMut then
+						table.insert(queue, egg.id)
+						break
+					end
+				end
 			end
 		end
 
@@ -1802,29 +1811,39 @@ local function updatePlantStatus()
 end
 
 
-local EggEggDropdown = Menu.tabs.egg.left1:Dropdown({
+local EggDropdown2 = Menu.tabs.egg.left1:Dropdown({
 	Name = "Eggs List",
 	Search = true,
-	Multi = false,
+	Multi = true,
 	Required = true,
 	Options = eggOptions,
-	Default = { "General Kong Egg" },
-	Callback = function(selectedNames)
-		selectedEggName = selectedNames
-		Window:Notify({ Title = "Selected", Description = "Selected" .. selectedNames .. " Eggs!", Lifetime = 3 })
+	Default = {  },
+	Callback = function(Value)
+		selectedEggName = {}
+		for v, State in next, Value do
+			if State then
+				table.insert(selectedFruits, eggData.name)
+			end
+		end
+		Window:Notify({ Title = "Selected", Description = "Selected" .. Value .. " Eggs!", Lifetime = 3 })
 	end
 })
 
-local EggMutsDropdown = Menu.tabs.egg.left1:Dropdown({
+local MutsDropdown2 = Menu.tabs.egg.left1:Dropdown({
 	Name = "Mutation List",
 	Search = true,
-	Multi = false,
+	Multi = true,
 	Required = true,
 	Options = Menu.data.muts,
-	Default = { "Snow" },
-	Callback = function(selectedNames)
-		selectedMutName = selectedNames
-		Window:Notify({ Title = "Selected", Description = "Selected" .. selectedNames .. " Eggs!", Lifetime = 3 })
+	Default = {  },
+	Callback = function(Value)
+		selectedMutName = {}
+		for v, State in next, Value do
+			if State then
+				table.insert(selectedMutName, v)
+			end
+		end
+		Window:Notify({ Title = "Selected", Description = "Selected" .. Value .. " Mutation!", Lifetime = 3 })
 	end
 })
 
@@ -1835,16 +1854,6 @@ Menu.tabs.egg.left1:Toggle({
 		plantStage = s
 
 		if plantStage then
-			if not selectedEggName or not selectedMutName then
-				Window:Notify({
-					Title = "Error",
-					Description = "Select egg and mutation first!",
-					Lifetime = 3
-				})
-				plantStage = false
-				return
-			end
-
 			plantThread = task.spawn(function()
 				while plantStage do
 					updatePlantStatus()
@@ -1857,10 +1866,24 @@ Menu.tabs.egg.left1:Toggle({
 						continue
 					end
 
+					if (not selectedEggName or #selectedEggName == 0) or (not selectedMutName or #selectedMutName == "") then
+						Window:Notify({
+							Title = "Error",
+							Description = "Select at least one egg and a mutation!",
+							Lifetime = 3
+						})
+						return
+					end
+
 					local queue = {}
 					for _, egg in ipairs(Menu.data.EggInventory) do
-						if egg.name == selectedEggName and egg.mutation == selectedMutName then
-							table.insert(queue, egg.id)
+						for _, allowedName in ipairs(selectedEggName) do
+							for _, allowedMut in ipairs(selectedMutName) do
+								if egg.name == allowedName and egg.mutation == allowedMut then
+									table.insert(queue, egg.id)
+									break
+								end
+							end
 						end
 					end
 
@@ -1920,6 +1943,109 @@ Menu.tabs.egg.left1:Button({
 					end)
 				end
 			end
+		end
+	end
+})
+
+local island = workspace.Art:FindFirstChild(islandName)
+local conveyor9, belt
+
+if island and island:FindFirstChild("ENV") then
+	local conveyor = island.ENV:FindFirstChild("Conveyor")
+	if conveyor then
+		conveyor9 = conveyor:FindFirstChild("Conveyor9")
+		if conveyor9 then
+			belt = conveyor9:FindFirstChild("Belt")
+		end
+	end
+end
+
+local function getAllEggOnBelt()
+	local results = {}
+	if not belt then return results end
+
+	for _, obj in ipairs(belt:GetChildren()) do
+		local rootPart = obj:FindFirstChild("RootPart")
+		if not rootPart then continue end
+
+		local gui = rootPart:FindFirstChild("GUI/EggGUI")
+		if not gui then continue end
+
+		local eggNameObj = gui:FindFirstChild("EggName")
+		local mutateObj = gui:FindFirstChild("Mutate")
+
+		if eggNameObj and eggNameObj:IsA("TextLabel") and mutateObj and mutateObj:IsA("TextLabel") then
+			local eggName = eggNameObj.Text ~= "" and eggNameObj.Text or "Unknown"
+			local mutateValue = mutateObj.Text ~= "" and mutateObj.Text or "Dino"
+
+			table.insert(results, {
+				fullname = obj.Name,
+				name = eggName,
+				mutate = mutateValue
+			})
+		end
+	end
+
+	return results
+end
+
+local EggDropdown3 = Menu.tabs.egg.right1:Dropdown({
+	Name = "Eggs List",
+	Search = true,
+	Multi = true,
+	Required = true,
+	Options = eggOptions,
+	Default = {  },
+	Callback = function(Value)
+		selectedEggName = {}
+		for v, State in next, Value do
+			if State then
+				table.insert(selectedEggName, v)
+			end
+		end
+	end
+})
+
+local MutsDropdown3 = Menu.tabs.egg.right1:Dropdown({
+	Name = "Mutation List",
+	Search = true,
+	Multi = true,
+	Required = true,
+	Options = Menu.data.muts,
+	Default = {  },
+	Callback = function(Value)
+		selectedMutName = {}
+		for v, State in next, Value do
+			if State then
+				table.insert(selectedMutName, v)
+			end
+		end
+	end
+})
+
+Menu.tabs.egg.right1:Toggle({
+	Name = "Automatic buy",
+	Default = false,
+	Callback = function(state)
+		autoBuyEggs = state
+		if state then
+			task.spawn(function()
+				while autoBuyEggs do
+					local eggsOnBelt = getAllEggOnBelt()
+
+					for _, egg in ipairs(eggsOnBelt) do
+						
+						local matchEgg = table.find(selectedEggName, egg.name)
+						local matchMut = table.find(selectedMutName, egg.mutate)
+						
+						if matchEgg and matchMut then
+							pcall(function() CharacterRE:FireServer("BuyEgg", egg.fullname) end)
+						end
+					end
+
+					task.wait(0.3)
+				end
+			end)
 		end
 	end
 })
@@ -1987,8 +2113,6 @@ Menu.tabs.fruit.left1:Toggle({
         end
     end
 })
-
-
 
 -----------------------------------------------------------
 -- DUPE TAB
